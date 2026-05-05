@@ -32,16 +32,20 @@ it('normalises time-series response to date-keyed floats', function () {
     expect($rates)->toBe(['2024-01-15' => 1.0821, '2024-01-16' => 1.0834]);
 });
 
-it('null-fills dates not present in the API response (weekends/holidays)', function () {
+it('carry-fills dates not present in the API response (weekends/holidays)', function () {
     Http::fake([
         'fake-frankfurter.test/*' => Http::response([
             'rates' => ['2024-01-15' => ['EUR' => 1.0821]],
         ]),
     ]);
 
+    // 2024-01-14 is a Sunday — not in the API response.
+    // No prior business-day rate exists in the window, so the service
+    // falls forward to the nearest available date (2024-01-15).
     $rates = makeFrankfurterService()->getHistoricalRates('EUR', ['2024-01-15', '2024-01-14']);
 
-    expect($rates['2024-01-14'])->toBeNull();
+    expect($rates['2024-01-14'])->toBe(1.0821);
+    expect($rates['2024-01-15'])->toBe(1.0821);
 });
 
 it('returns null on a server error (transient failure)', function () {

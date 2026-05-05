@@ -6,18 +6,10 @@ namespace App\Services;
 
 use App\Models\Report;
 
-readonly class ResolveResult
-{
-    public function __construct(
-        public array  $rates,       // ['2024-01-15' => 1.08, ...]
-        public string $dataSource,  // 'frankfurter' | 'synthetic'
-    ) {}
-}
-
 class HistoricalRateResolver
 {
     public function __construct(
-        private readonly FrankfurterService  $frankfurter,
+        private readonly FrankfurterService   $frankfurter,
         private readonly SyntheticRateService $synthetic,
     ) {}
 

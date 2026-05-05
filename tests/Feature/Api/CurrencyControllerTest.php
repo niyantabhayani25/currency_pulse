@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\Currency;
 use App\Models\User;
 use App\Models\UserCurrency;
-use App\Services\CurrencyLayerService;
+use App\Services\FrankfurterService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -26,8 +26,8 @@ it('index returns currencies, selected_ids, and rates keys', function () {
     $user = User::factory()->create();
     Currency::factory()->eur()->create();
 
-    $this->mock(CurrencyLayerService::class, function ($mock) {
-        $mock->shouldReceive('getLiveRates')->andReturn(['EUR' => 1.08]);
+    $this->mock(FrankfurterService::class, function ($mock) {
+        $mock->shouldReceive('getLatestRates')->andReturn(['EUR' => 1.08]);
     });
 
     $this->actingAs($user)
@@ -36,13 +36,13 @@ it('index returns currencies, selected_ids, and rates keys', function () {
         ->assertJsonStructure(['currencies', 'selected_ids', 'rates']);
 });
 
-it('index returns null rates when CurrencyLayer is unavailable', function () {
+it('index returns null rates when Frankfurter is unavailable', function () {
     $user     = User::factory()->create();
     $currency = Currency::factory()->eur()->create();
     UserCurrency::create(['user_id' => $user->id, 'currency_id' => $currency->id]);
 
-    $this->mock(CurrencyLayerService::class, function ($mock) {
-        $mock->shouldReceive('getLiveRates')->andReturn(null);
+    $this->mock(FrankfurterService::class, function ($mock) {
+        $mock->shouldReceive('getLatestRates')->andReturn(null);
     });
 
     $this->actingAs($user)
@@ -56,8 +56,8 @@ it('index returns the authenticated users selected currency ids', function () {
     $currency = Currency::factory()->eur()->create();
     UserCurrency::create(['user_id' => $user->id, 'currency_id' => $currency->id]);
 
-    $this->mock(CurrencyLayerService::class, function ($mock) {
-        $mock->shouldReceive('getLiveRates')->andReturn(['EUR' => 1.08]);
+    $this->mock(FrankfurterService::class, function ($mock) {
+        $mock->shouldReceive('getLatestRates')->andReturn(['EUR' => 1.08]);
     });
 
     $this->actingAs($user)
