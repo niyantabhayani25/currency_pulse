@@ -122,8 +122,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -133,11 +131,13 @@ import {
   Tooltip,
   Filler,
 } from 'chart.js'
+import { computed, onMounted, ref } from 'vue'
+import { Line } from 'vue-chartjs'
 import SectionCard from '@/components/ui/SectionCard.vue'
 import { useApi } from '@/composables/useApi'
 import { useCurrencyFormat } from '@/composables/useCurrencyFormat'
-import type { ReportDetail } from '@/types'
 import { dashboard } from '@/routes'
+import type { ReportDetail } from '@/types'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler)
 
@@ -151,7 +151,11 @@ const loading = ref(true)
 
 onMounted(async () => {
   const data = await request<{ report: ReportDetail }>(api => api.get(`/reports/${props.reportId}`))
-  if (data) report.value = data.report
+
+  if (data) {
+report.value = data.report
+}
+
   loading.value = false
 })
 

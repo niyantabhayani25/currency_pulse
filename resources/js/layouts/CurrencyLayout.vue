@@ -49,11 +49,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
 import { Head, Link, usePage } from '@inertiajs/vue3'
-import type { PageProps } from '@/types'
-import { dashboard, logout } from '@/routes'
+import { computed, ref, watch } from 'vue'
 import { Toaster } from '@/components/ui/sonner'
+import { dashboard, logout } from '@/routes'
+import type { PageProps } from '@/types'
 
 defineProps<{ title?: string }>()
 
@@ -64,18 +64,32 @@ const flash = computed(() => page.props.flash)
 const dismissed = ref(false)
 
 const activeFlash = computed(() => {
-  if (dismissed.value) return null
+  if (dismissed.value) {
+return null
+}
+
   return flash.value?.success ?? flash.value?.info ?? flash.value?.error ?? null
 })
 
 const toastClass = computed(() => {
-  if (flash.value?.success) return 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-  if (flash.value?.info)    return 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-  if (flash.value?.error)   return 'bg-red-500/15 border-red-500/30 text-red-300'
+  if (flash.value?.success) {
+return 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+}
+
+  if (flash.value?.info)    {
+return 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+}
+
+  if (flash.value?.error)   {
+return 'bg-red-500/15 border-red-500/30 text-red-300'
+}
+
   return ''
 })
 
-watch(flash, () => { dismissed.value = false })
+watch(flash, () => {
+ dismissed.value = false 
+})
 
 function dismissFlash() {
   dismissed.value = true

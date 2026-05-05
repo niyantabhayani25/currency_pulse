@@ -75,7 +75,11 @@ const search = ref('')
 
 const visibleCurrencies = computed(() => {
   const q = search.value.toLowerCase().trim()
-  if (!q) return props.allCurrencies
+
+  if (!q) {
+return props.allCurrencies
+}
+
   return props.allCurrencies.filter(
     c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)
   )

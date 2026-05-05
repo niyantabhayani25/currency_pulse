@@ -1,5 +1,6 @@
+import axios from 'axios'
+import type {AxiosResponse} from 'axios';
 import { ref } from 'vue'
-import axios, { type AxiosResponse } from 'axios'
 import api from '@/lib/axios'
 
 export function useApi() {
@@ -12,11 +13,13 @@ export function useApi() {
 
         try {
             const res = await fn(api)
+
             return res.data
         } catch (e) {
             error.value = axios.isAxiosError(e)
                 ? (e.response?.data?.message ?? 'Something went wrong.')
                 : 'Unexpected error.'
+
             return null
         } finally {
             loading.value = false

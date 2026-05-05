@@ -189,21 +189,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import SectionCard from '@/components/ui/SectionCard.vue'
-import StatusBadge from '@/components/ui/StatusBadge.vue'
+import { computed, onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import CurrencySelector from '@/components/CurrencySelector.vue'
 import RatesTable from '@/components/RatesTable.vue'
+import SectionCard from '@/components/ui/SectionCard.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useApi } from '@/composables/useApi'
-import type { Currency, PageProps, RangePair, ReportListItem } from '@/types'
 import { show as showReport } from '@/routes/reports'
-import { toast } from 'vue-sonner'
+import type { Currency, PageProps, RangePair, ReportListItem } from '@/types'
 
 const MAX_CURRENCIES = 5
 
 // ── Props (from DashboardController via Inertia) ──────────────────────────────
-const props = defineProps<{ rangePairs: RangePair[] }>()
+defineProps<{ rangePairs: RangePair[] }>()
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 const page = usePage<PageProps>()
@@ -259,16 +259,22 @@ async function saveCurrencies(): Promise<void> {
   const data = await request<{ selected_ids: number[] }>(
     api => api.put('/currencies', { currency_ids: localSelectedIds.value })
   )
+
   if (data) {
     savedIds.value = data.selected_ids
     const currData = await request<{ currencies: Currency[]; selected_ids: number[]; rates: Record<string, number | null> | null }>(
       api => api.get('/currencies')
     )
-    if (currData) rates.value = currData.rates
+
+    if (currData) {
+rates.value = currData.rates
+}
+
     toast.success('Currency selection saved.')
   } else {
     toast.error('Failed to save currencies. Please try again.')
   }
+
   saving.value = false
 }
 
@@ -277,7 +283,10 @@ const reportForm  = ref({ currencyId: 0, range: '' })
 const submitting  = ref(false)
 
 async function submitReport(): Promise<void> {
-  if (!reportForm.value.currencyId || !reportForm.value.range) return
+  if (!reportForm.value.currencyId || !reportForm.value.range) {
+return
+}
+
   submitting.value = true
 
   const data = await request(
@@ -290,18 +299,27 @@ async function submitReport(): Promise<void> {
   if (data) {
     reportForm.value = { currencyId: 0, range: '' }
     const repData = await request<{ reports: ReportListItem[] }>(api => api.get('/reports'))
-    if (repData) reports.value = repData.reports
+
+    if (repData) {
+reports.value = repData.reports
+}
+
     toast.success('Report queued. It will be ready shortly.')
   } else {
     toast.error('Failed to submit report. Please try again.')
   }
+
   submitting.value = false
 }
 
 // ── Delete report ─────────────────────────────────────────────────────────────
 async function deleteReport(id: number): Promise<void> {
-  if (!confirm('Delete this report?')) return
+  if (!confirm('Delete this report?')) {
+return
+}
+
   const ok = await request(api => api.delete(`/reports/${id}`))
+
   if (ok !== null) {
     reports.value = reports.value.filter(r => r.id !== id)
     toast.success('Report deleted.')
@@ -313,8 +331,15 @@ async function deleteReport(id: number): Promise<void> {
 // ── Time greeting ─────────────────────────────────────────────────────────────
 const timeOfDay = computed(() => {
   const h = new Date().getHours()
-  if (h < 12) return 'morning'
-  if (h < 17) return 'afternoon'
+
+  if (h < 12) {
+return 'morning'
+}
+
+  if (h < 17) {
+return 'afternoon'
+}
+
   return 'evening'
 })
 </script>
