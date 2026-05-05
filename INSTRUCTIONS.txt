@@ -1,0 +1,178 @@
+===========================================================================
+  CurrencyPulse — Build & Run Instructions
+===========================================================================
+
+PROJECT STRUCTURE NOTE
+---------------------------------------------------------------------------
+This submission is a single unified codebase that contains both the
+Laravel backend and the Vue.js frontend. They are co-located in one
+project folder using Inertia.js as the bridge layer (explained in the
+architecture section of PROJECT_OVERVIEW.md).
+
+  - Laravel backend code: app/, routes/, database/, config/, tests/
+  - Vue.js frontend code: resources/js/
+
+The Vue.js application is built by Vite and served by Laravel — there
+is no separate Node.js server for the frontend.
+
+===========================================================================
+  PREREQUISITES
+===========================================================================
+
+  - PHP 8.3 or higher
+  - Composer (https://getcomposer.org)
+  - Node.js 20 or higher + npm
+  - MySQL 8.0 or higher (running and accessible)
+  - php-curl extension enabled
+  - php-pdo_mysql extension enabled
+
+Verify versions:
+  php -v
+  composer -V
+  node -v
+  npm -v
+
+===========================================================================
+  STEP 1 — Install Dependencies
+===========================================================================
+
+  cd five99
+
+  composer install
+  npm install
+
+===========================================================================
+  STEP 2 — Environment Setup
+===========================================================================
+
+  cp .env.example .env
+  php artisan key:generate
+
+  Open .env and set your MySQL credentials:
+
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=currency_pulse
+    DB_USERNAME=your_mysql_username
+    DB_PASSWORD=your_mysql_password
+
+  Create the database in MySQL before running migrations:
+
+    mysql -u root -p -e "CREATE DATABASE currency_pulse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+OPTIONAL — CurrencyLayer API key:
+  The CurrencyLayerService is implemented and wired in the container.
+  To activate it as the live-rates provider, add your API key to .env:
+
+    CURRENCY_LAYER_API_KEY=your_key_here
+    CURRENCY_LAYER_BASE_URL=http://api.currencylayer.com
+
+  Then in app/Http/Controllers/Api/CurrencyController.php, swap the
+  injected service from FrankfurterService to CurrencyLayerService.
+
+  By default, the free Frankfurter API (ECB data, no key required) is
+  used for all rate fetching.
+
+===========================================================================
+  STEP 3 — Database Setup
+===========================================================================
+
+  php artisan migrate
+  php artisan db:seed --class=CurrencySeeder
+
+  The seeder fetches the currency list from the Frankfurter API and
+  populates the currencies table. An internet connection is required
+  for this step.
+
+===========================================================================
+  STEP 4 — Run the Application (3 terminals)
+===========================================================================
+
+  Open three separate terminal windows in the project folder:
+
+  --- Terminal 1: PHP development server ---
+  php artisan serve
+  (serves the application at http://localhost:8000)
+
+  --- Terminal 2: Vite (frontend build + hot reload) ---
+  npm run dev
+  (compiles Vue.js, TypeScript, and Tailwind CSS with HMR)
+
+  --- Terminal 3: Queue worker (required for report generation) ---
+  php artisan queue:work
+  (processes background report generation jobs)
+
+  Visit: http://localhost:8000
+
+  Register an account to get started. The currency list is pre-seeded.
+
+  IMPORTANT: If you make changes to PHP service files, restart the queue
+  worker (Ctrl+C, then php artisan queue:work) so the worker picks up
+  the latest code.
+
+===========================================================================
+  STEP 5 — Generating Reports
+===========================================================================
+
+  The scheduler triggers report processing every 15 minutes in production.
+  In development, run this manually after requesting a report:
+
+    php artisan reports:process
+
+  Then watch the queue worker terminal — it will process the job and
+  update the report status to "completed" on the dashboard.
+
+===========================================================================
+  RUNNING TESTS
+===========================================================================
+
+  php artisan test
+
+  All 68 tests should pass. Tests use an in-memory SQLite database
+  (configured in phpunit.xml) regardless of your MySQL setup — this is
+  intentional for speed and isolation. No internet connection required.
+
+  Run a specific group:
+    php artisan test --filter=Api
+    php artisan test --filter=Auth
+
+===========================================================================
+  PRODUCTION BUILD (frontend assets)
+===========================================================================
+
+  npm run build
+
+  This compiles and minifies all Vue.js, TypeScript, and CSS files into
+  public/build/. The Vite dev server is no longer needed after this.
+
+===========================================================================
+  USEFUL COMMANDS
+===========================================================================
+
+  php artisan tinker                           Interactive REPL
+  php artisan reports:process                  Dispatch pending report jobs
+  php artisan queue:work                       Start the queue worker
+  php artisan db:seed --class=CurrencySeeder   Refresh currency list
+  php artisan migrate:fresh --seed             Wipe and rebuild database
+  php artisan cache:clear                      Clear cached API responses
+  php artisan test                             Run test suite
+
+===========================================================================
+  ENVIRONMENT VARIABLES REFERENCE
+===========================================================================
+
+  APP_KEY                  Required. Set by key:generate.
+  DB_CONNECTION            mysql (default)
+  DB_HOST                  MySQL host, default 127.0.0.1
+  DB_PORT                  MySQL port, default 3306
+  DB_DATABASE              Database name, e.g. currency_pulse
+  DB_USERNAME              MySQL username
+  DB_PASSWORD              MySQL password
+  QUEUE_CONNECTION         database — jobs stored in MySQL jobs table
+  CACHE_STORE              database — cache stored in MySQL cache table
+  MAIL_MAILER              log (emails written to storage/logs/laravel.log)
+  CURRENCY_LAYER_API_KEY   Optional. Only needed to activate CurrencyLayer.
+  CURRENCY_LAYER_BASE_URL  Optional. http://api.currencylayer.com
+
+===========================================================================
